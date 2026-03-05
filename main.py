@@ -16,7 +16,12 @@ st.markdown("""
     }
     .stButton>button { width: 100%; border-radius: 8px; font-weight: 600; height: 45px; }
     .user-entry { font-family: monospace; padding: 4px; border-left: 3px solid #58a6ff; background: #0d1117; margin-bottom: 2px; font-size: 13px; }
-    .footer { position: fixed; left: 0; bottom: 0; width: 100%; background: #0d1117; padding: 10px; text-align: center; border-top: 1px solid #30363d; color: #58a6ff; z-index: 100; }
+    .footer { 
+        position: fixed; left: 0; bottom: 0; width: 100%; 
+        background: #0d1117; padding: 10px; text-align: center; 
+        border-top: 1px solid #30363d; color: #58a6ff; z-index: 100;
+        line-height: 1.5;
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -37,13 +42,15 @@ with left_col:
     u_len = st.number_input("Username Length" if not is_ar else "عدد أحرف اليوزر", 3, 20, 4)
     u_prefix = st.text_input("يبدأ اليوزر بـ" if is_ar else "User Starts With", value="")
     
+    # السرعة الآن مضبوطة على 0.1 كأعلى خيار
     speed_option = st.select_slider(
         "Scanning Speed" if not is_ar else "سرعة الفحص",
         options=["Slow", "Normal", "Fast", "Extreme"],
         value="Extreme"
     )
     
-    delay_map = {"Slow": 0.5, "Normal": 0.2, "Fast": 0.05, "Extreme": 0.001}
+    # تعديل الـ Delay بناءً على طلبك (0.1 لأسرع شيء)
+    delay_map = {"Slow": 0.8, "Normal": 0.5, "Fast": 0.3, "Extreme": 0.1}
     current_delay = delay_map[speed_option]
     
     use_under = st.checkbox("ضع شرطة باليوزر _" if is_ar else "Add Underscore _")
@@ -64,7 +71,6 @@ with left_col:
         st.session_state.data = {k: [] for k in st.session_state.data}
         st.rerun()
 
-    # تعديل اسم الملف ليصبح users.txt
     if st.session_state.data["valid"]:
         st.download_button(
             label="📥 " + ("حفظ المتاح" if is_ar else "Save Valid"),
@@ -113,7 +119,7 @@ if st.session_state.is_running:
             l_u[idx] = "_"; user = "".join(l_u)
 
         try:
-            r = requests.get(f"https://auth.roblox.com/v1/usernames/validate?Username={user}&Birthday=2000-01-01", timeout=0.5)
+            r = requests.get(f"https://auth.roblox.com/v1/usernames/validate?Username={user}&Birthday=2000-01-01", timeout=0.8)
             if r.status_code == 200:
                 code = r.json().get("code")
                 if code == 0: st.session_state.data["valid"].append(user)
@@ -127,5 +133,10 @@ if st.session_state.is_running:
         update_ui()
         if current_delay > 0: time.sleep(current_delay)
 
-# الفوتر مع Made in Saudi Arabia 🇸🇦
-st.markdown(f"""<div class="footer">Made in Saudi Arabia 🇸🇦 | Developed by: 7o.f | Mode: {speed_option}</div>""", unsafe_allow_html=True)
+# الفوتر المعدل بناءً على طلبك
+st.markdown(f"""
+    <div class="footer">
+        Developed by: 7o.f | discord: 7o.f | Mode: {speed_option}<br>
+        Made in Saudi Arabia 🇸🇦
+    </div>
+""", unsafe_allow_html=True)
