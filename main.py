@@ -143,7 +143,7 @@ if st.session_state.is_running and total_found < gen_limit:
             elif code == 2: st.session_state.data["censored"].append(user)
             else: st.session_state.data["unknown"].append(user)
         elif r.status_code == 429:
-            time.sleep(2)
+            time.sleep(0.5)
     except:
         pass
 
@@ -151,3 +151,4 @@ if st.session_state.is_running and total_found < gen_limit:
 
 # --- 7. الفوتر ---
 st.markdown(f"""<div class="footer"><span>Made in Saudi Arabia 🇸🇦</span><span>Developed by: 7o.f | Discord: 7o.f</span></div>""", unsafe_allow_html=True)
+
