@@ -4,10 +4,10 @@ import time
 import random
 import string
 
-# إعدادات الصفحة
+# --- إعدادات الصفحة ---
 st.set_page_config(page_title="Sniper User Roblox", layout="wide")
 
-# CSS بسيط جداً لضمان سرعة التحميل
+# --- التنسيق (CSS) ---
 st.markdown("""
     <style>
     .stApp { background-color: #0d1117; color: #adbac7; }
@@ -16,7 +16,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# الذاكرة
+# إدارة البيانات
 if "results" not in st.session_state:
     st.session_state.results = {"valid": [], "count": 0}
 if "running" not in st.session_state:
@@ -27,10 +27,14 @@ st.title("🎯 Sniper User Roblox")
 col1, col2 = st.columns([1, 2])
 
 with col1:
-    st.subheader("⚙️ Settings")
-    u_len = st.number_input("عدد الحروف", 3, 20, 4)
-    u_prefix = st.text_input("يبدأ بـ", "")
-    use_under = st.checkbox("إجبارية الشرطة _")
+    st.subheader("⚙️ Settings / الإعدادات")
+    
+    # التعديلات المطلوبة هنا
+    u_len = st.number_input("عدد أحرف اليوزر", 3, 20, 4)
+    u_prefix = st.text_input("بداية اليوزر بـ", value="") # الحقل الآن فارغ تماماً
+    use_under = st.checkbox("شرطة باليوزر _") # تغيير المسمى
+    
+    st.markdown("---")
     
     if not st.session_state.running:
         if st.button("🚀 ابدأ القنص", use_container_width=True):
@@ -41,39 +45,49 @@ with col1:
             st.session_state.running = False
             st.rerun()
 
-    if st.button("🗑️ مسح", use_container_width=True):
+    if st.button("🗑️ مسح النتائج", use_container_width=True):
         st.session_state.results = {"valid": [], "count": 0}
         st.rerun()
 
+    if st.session_state.results["valid"]:
+        st.download_button("حفظ اليوزرات المتاحة بملف txt", 
+                           "\n".join(st.session_state.results["valid"]), 
+                           "valid.txt", use_container_width=True)
+
 with col2:
-    st.subheader("📊 Results")
-    st.write(f"Total Checked: **{st.session_state.results['count']}**")
-    st.write(f"Valid Found: **{len(st.session_state.results['valid'])}**")
+    st.subheader("📊 النتائج الحالية")
+    st.write(f"اليوزرات المفحوصة: **{st.session_state.results['count']}**")
+    st.write(f"اليوزرات المتاحة: **{len(st.session_state.results['valid'])}**")
     
     if st.session_state.results["valid"]:
-        st.download_button("📥 تحميل المتاح txt", "\n".join(st.session_state.results["valid"]), "valid.txt")
-        for u in reversed(st.session_state.results["valid"][-10:]):
+        for u in reversed(st.session_state.results["valid"][-15:]):
             st.markdown(f'<div class="user-box">{u}</div>', unsafe_allow_html=True)
 
-# المحرك (خفيف جداً)
+# --- المحرك (Engine) ---
 if st.session_state.running:
     chars = string.ascii_lowercase + string.digits
-    for _ in range(5): # يفحص 5 يوزرات في كل دورة
+    for _ in range(5):
         needed = max(0, u_len - len(u_prefix))
         body = "".join(random.choices(chars, k=needed))
         user = u_prefix + body
         
+        # منطق الشرطة الإجباري إذا تم تفعيله
         if use_under and len(user) > 2:
-            l = list(user); l[1] = "_"; user = "".join(l)
+            l_user = list(user)
+            # وضع الشرطة في مكان عشوائي ليس في الأطراف
+            idx = random.randint(1, len(l_user) - 2)
+            l_user[idx] = "_"
+            user = "".join(l_user)
             
         try:
             r = requests.get(f"https://auth.roblox.com/v1/usernames/validate?Username={user}&Birthday=2000-01-01", timeout=2)
             if r.status_code == 200 and r.json().get("code") == 0:
                 st.session_state.results["valid"].append(user)
-        except: pass
+        except:
+            pass
         st.session_state.results["count"] += 1
     
-    time.sleep(0.1) # تبريد بسيط للسيرفر
+    time.sleep(0.1)
     st.rerun()
 
-st.markdown('<div class="footer">Made in Saudi Arabia 🇸🇦 | Dev: 7o.f</div>', unsafe_allow_html=True)
+st.markdown('<div class="footer">Made in Saudi Arabia 🇸🇦 | Developed by: 7o.f</div>', unsafe_allow_html=True)
