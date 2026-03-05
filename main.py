@@ -4,6 +4,7 @@ import time
 import random
 import string
 import base64
+import os
 
 # --- 1. إعدادات الصفحة ---
 st.set_page_config(page_title="Sniper roblox user | 7o.f", page_icon="⚡", layout="wide")
@@ -17,7 +18,6 @@ if "theme" not in st.session_state:
     st.session_state.theme = "dark"
 
 # --- 2. التنسيق والسمات (CSS) ---
-# تحديد الألوان بناءً على اختيار المستخدم (أبيض أو أسود)
 is_dark = st.session_state.theme == "dark"
 bg_color = "#0d1117" if is_dark else "#ffffff"
 text_color = "#adbac7" if is_dark else "#1c1e21"
@@ -45,17 +45,27 @@ st.markdown(f"""
     </style>
     """, unsafe_allow_html=True)
 
-# دالة لعرض الشعار
-def get_base64_img(file_path):
-    with open(file_path, "rb") as f:
-        return base64.b64encode(f.read()).decode()
+# دالة لعرض الشعار (معدلة للبحث عن الاسم الجديد وتجنب الخطأ)
+def get_base64_img(file_name):
+    if os.path.exists(file_name):
+        with open(file_name, "rb") as f:
+            return base64.b64encode(f.read()).decode()
+    return None
 
-img_data = get_base64_img("783289-robloxbiru2.png")
+# جلب الصورة باسمها الجديد
+img_data = get_base64_img("robloxbiru2.png")
+
+# تصميم الهيدر (شعار + اسم)
+if img_data:
+    logo_html = f'<img src="data:image/png;base64,{img_data}" width="60">'
+else:
+    # أيقونة بديلة في حال عدم وجود الصورة
+    logo_html = '<div style="background:#58a6ff; width:50px; height:50px; border-radius:10px; display:flex; align-items:center; justify-content:center; color:white; font-weight:bold; font-size:24px;">R</div>'
 
 # --- 3. الواجهة الرئيسية ---
 st.markdown(f"""
     <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
-        <img src="data:image/png;base64,{img_data}" width="60">
+        {logo_html}
         <h1 style="color: {text_color}; margin: 0;">Sniper roblox user</h1>
     </div>
     """, unsafe_allow_html=True)
@@ -77,9 +87,8 @@ with left_col:
     gen_limit = st.slider("الكمية" if is_ar else "Count", 100, 100000, 5000, 100)
     u_len = st.number_input("طول اليوزر" if is_ar else "Username Length", 3, 20, 4)
     
-    # حقول البداية والنهاية
     u_prefix = st.text_input("يبدأ اليوزر بـ" if is_ar else "User Starts With", value="")
-    u_suffix = st.text_input("ينتهي اليوزر بـ" if is_ar else "User Ends With", value="") # الحقل الجديد المطلوب
+    u_suffix = st.text_input("ينتهي اليوزر بـ" if is_ar else "User Ends With", value="")
     
     speed_option = st.select_slider(
         "سرعة الفحص" if is_ar else "Scanning Speed",
@@ -125,11 +134,8 @@ with right_col:
 
 # --- 4. محرك الفحص ---
 if st.session_state.is_running:
-    # حساب الطول المطلوب للجزء العشوائي
     needed = max(1, u_len - len(u_prefix) - len(u_suffix))
     body = "".join(random.choices(string.ascii_lowercase + string.digits, k=needed))
-    
-    # تجميع اليوزر (بداية + عشوائي + نهاية)
     user = u_prefix + body + u_suffix
     
     if use_under and len(user) > 2:
