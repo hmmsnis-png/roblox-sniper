@@ -29,8 +29,10 @@ if "data" not in st.session_state:
     st.session_state.data = {"valid": [], "taken": [], "censored": [], "error": [], "unknown": []}
 if "is_running" not in st.session_state: 
     st.session_state.is_running = False
+    
+img_data = get_base64_img("783289-robloxbiru2.png")
 
-st.title("⚡ Max Speed Sniper Roblox")
+st.title("Sniper roblox user")
 
 left_col, right_col = st.columns([1, 2], gap="large")
 
@@ -139,4 +141,5 @@ st.markdown(f"""
         <div class="made-in">Made in Saudi Arabia 🇸🇦</div>
     </div>
 """, unsafe_allow_html=True)
+
 
