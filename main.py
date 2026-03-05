@@ -4,10 +4,10 @@ import time
 import random
 import string
 
-# --- إعدادات الصفحة ---
+# --- 1. إعدادات الصفحة الأساسية ---
 st.set_page_config(page_title="Sniper User Roblox | 7o.f", page_icon="🎯", layout="wide")
 
-# --- تنسيق CSS المطور ---
+# --- 2. التنسيق (CSS) ---
 st.markdown("""
     <style>
     .stApp { background-color: #0d1117; color: #adbac7; }
@@ -16,29 +16,30 @@ st.markdown("""
     }
     .stButton>button {
         width: 100%; border-radius: 8px; background-color: #1f6feb; color: white;
-        border: none; transition: 0.3s; font-weight: 600; height: 45px;
+        border: none; font-weight: 600; height: 45px;
     }
-    .stButton>button:hover { background-color: #388bfd; transform: translateY(-2px); }
-    h1 { color: #58a6ff !important; }
+    .stButton>button:hover { background-color: #388bfd; }
     .footer { 
         position: fixed; left: 0; bottom: 0; width: 100%; 
         background-color: #0d1117; color: #58a6ff; 
         padding: 10px 25px; border-top: 1px solid #30363d; 
-        font-size: 14px; z-index: 100;
-        display: flex; justify-content: space-between;
+        font-size: 14px; z-index: 100; display: flex; justify-content: space-between;
     }
     .user-entry { 
-        font-family: 'Source Code Pro', monospace; padding: 6px 12px; 
+        font-family: 'Source Code Pro', monospace; padding: 6px; 
         border-radius: 4px; margin-bottom: 4px; border-left: 3px solid #58a6ff; 
-        background: #0d1117; color: #e6edf3; 
+        background: #0d1117; color: #e6edf3;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# إدارة الحالة
+# --- 3. إدارة البيانات (Session State) ---
 if "data" not in st.session_state:
     st.session_state.data = {"valid": [], "taken": [], "censored": [], "error": [], "unknown": []}
+if "is_running" not in st.session_state: 
+    st.session_state.is_running = False
 
+# --- 4. الواجهة الجانبية (Settings) ---
 st.title("🎯 Sniper User Roblox")
 
 left_col, right_col = st.columns([1, 2], gap="large")
@@ -53,98 +54,88 @@ with left_col:
     u_prefix = st.text_input("Prefix" if not is_ar else "يبدأ بـ", placeholder="f5")
     use_under = st.checkbox("Must include '_'" if not is_ar else "إجبارية الشرطة _")
 
-    st.markdown("---")
+    st.divider()
     
-    start_btn = st.button("🚀 Start Sniper" if not is_ar else "🚀 ابدأ القنص")
-    
-    if st.button("🗑️ Clear Results" if not is_ar else "🗑️ مسح النتائج"):
+    # أزرار التحكم
+    col_btn1, col_btn2 = st.columns(2)
+    with col_btn1:
+        if st.button("🚀 Start" if not is_ar else "🚀 ابدأ"):
+            st.session_state.is_running = True
+    with col_btn2:
+        if st.button("🛑 Stop" if not is_ar else "🛑 إيقاف"):
+            st.session_state.is_running = False
+
+    if st.button("🗑️ Clear" if not is_ar else "🗑️ مسح"):
         st.session_state.data = {k: [] for k in st.session_state.data}
         st.rerun()
 
     # زر التحميل
-    download_placeholder = st.empty()
     if st.session_state.data["valid"]:
         valid_text = "\n".join(st.session_state.data["valid"])
-        download_placeholder.download_button(
-            label="حفظ اليوزرات المتاحة بملف txt",
-            data=valid_text,
-            file_name="valid.txt",
-            mime="text/plain",
-            use_container_width=True
-        )
+        st.download_button("حفظ اليوزرات المتاحة بملف txt", valid_text, "valid.txt", use_container_width=True)
 
+# --- 5. منطقة النتائج (تحديث سلس) ---
 with right_col:
-    # حجز مكان للإحصائيات للتحديث بدون ريسيت
-    stats_placeholder = st.empty()
+    total_found = sum(len(v) for v in st.session_state.data.values())
     
-    # حجز مكان للنتائج
-    tabs_placeholder = st.empty()
+    # الإحصائيات
+    m_cols = st.columns(4)
+    m_cols[0].metric("TOTAL", total_found)
+    m_cols[1].metric("VALID", len(st.session_state.data["valid"]))
+    m_cols[2].metric("TAKEN", len(st.session_state.data["taken"]))
+    m_cols[3].metric("CENSORED", len(st.session_state.data["censored"]))
 
-# --- محرك التشغيل اللحظي (بدون ريسيت للصفحة كاملة) ---
-if start_btn:
+    tabs = st.tabs(["✅ Valid", "❌ Taken", "🚫 Censored", "⚠️ Errors", "❓ Unknown"] if not is_ar 
+                   else ["✅ متاح", "❌ مستخدم", "🚫 مبند", "⚠️ أخطاء", "❓ غير معروف"])
+    
+    # عرض النتائج في التبويبات
+    categories = ["valid", "taken", "censored", "error", "unknown"]
+    for i, cat in enumerate(categories):
+        with tabs[i]:
+            for item in reversed(st.session_state.data[cat][-15:]):
+                st.markdown(f'<div class="user-entry">{item}</div>', unsafe_allow_html=True)
+
+# --- 6. المحرك (Engine) ---
+# نستخدم rerun في نهاية الفحص لضمان تحديث الأرقام واحد بواحد بسلاسة
+if st.session_state.is_running and total_found < gen_limit:
     chars = string.ascii_lowercase + string.digits
-    checked_count = 0
     
-    # هذه الحلقة ستعمل وتحدث العناصر المحجوزة فقط (Empty placeholders)
-    while checked_count < gen_limit:
-        # 1. توليد اليوزر (منطق الشرطة الإجبارية)
-        needed = max(0, u_len - len(u_prefix))
-        if use_under and needed > 1:
-            body = list(random.choices(chars, k=needed))
-            idx = random.randint(0, len(body) - 1)
-            body[idx] = "_"
-            user = u_prefix + "".join(body)
-            # التأكد من الأطراف
-            if user.startswith("_") or user.endswith("_"):
-                user = user.replace("_", random.choice(chars), 1)
-                mid_idx = random.randint(1, len(user)-2)
-                user_list = list(user)
-                user_list[mid_idx] = "_"
-                user = "".join(user_list)
-        else:
-            user = u_prefix + "".join(random.choices(chars, k=needed))
+    # توليد اليوزر
+    needed = max(0, u_len - len(u_prefix))
+    if use_under and needed > 1:
+        body = list(random.choices(chars, k=needed))
+        idx = random.randint(0, len(body)-1)
+        body[idx] = "_"
+        user = u_prefix + "".join(body)
+        # تصحيح الأطراف
+        if user.startswith("_") or user.endswith("_"):
+            user_list = list(user)
+            if user_list[0] == "_": user_list[0] = random.choice(chars)
+            if user_list[-1] == "_": user_list[-1] = random.choice(chars)
+            mid = random.randint(1, len(user_list)-2)
+            user_list[mid] = "_"
+            user = "".join(user_list)
+    else:
+        user = u_prefix + "".join(random.choices(chars, k=needed))
 
-        # 2. الفحص
-        try:
-            r = requests.get(f"https://auth.roblox.com/v1/usernames/validate?Username={user}&Birthday=2000-01-01", timeout=2)
-            if r.status_code == 200:
-                code = r.json().get("code")
-                if code == 0: st.session_state.data["valid"].append(user)
-                elif code == 1: st.session_state.data["taken"].append(user)
-                elif code == 2: st.session_state.data["censored"].append(user)
-                else: st.session_state.data["unknown"].append(user)
-            elif r.status_code == 429:
-                time.sleep(2)
-        except:
-            pass
+    # فحص اليوزر
+    try:
+        r = requests.get(f"https://auth.roblox.com/v1/usernames/validate?Username={user}&Birthday=2000-01-01", timeout=3)
+        if r.status_code == 200:
+            code = r.json().get("code")
+            if code == 0: st.session_state.data["valid"].append(user)
+            elif code == 1: st.session_state.data["taken"].append(user)
+            elif code == 2: st.session_state.data["censored"].append(user)
+            else: st.session_state.data["unknown"].append(user)
+        elif r.status_code == 429:
+            time.sleep(1)
+    except:
+        pass
 
-        checked_count = sum(len(v) for v in st.session_state.data.values())
+    # هذه الحركة هي اللي تخلي الموقع يفتح فوراً وتحدث الأرقام بسلاسة
+    st.rerun()
 
-        # 3. التحديث اللحظي للواجهة (هنا السحر!)
-        with stats_placeholder.container():
-            m1, m2, m3, m4 = st.columns(4)
-            m1.metric("TOTAL", checked_count)
-            m2.metric("VALID", len(st.session_state.data["valid"]))
-            m3.metric("TAKEN", len(st.session_state.data["taken"]))
-            m4.metric("CENSORED", len(st.session_state.data["censored"]))
-
-        with tabs_placeholder.container():
-            # عرض آخر النتائج في التبويبات بدون ريسيت للصفحة
-            current_tab_labels = ["✅ Valid", "❌ Taken", "🚫 Censored", "⚠️ Errors", "❓ Unknown"] if not is_ar else ["✅ متاح", "❌ مستخدم", "🚫 مبند", "⚠️ أخطاء", "❓ غير معروف"]
-            t1, t2, t3, t4, t5 = st.tabs(current_tab_labels)
-            
-            with t1: 
-                for u in reversed(st.session_state.data["valid"][-10:]): st.markdown(f'<div class="user-entry">{u}</div>', unsafe_allow_html=True)
-            with t2: 
-                for u in reversed(st.session_state.data["taken"][-10:]): st.markdown(f'<div class="user-entry">{u}</div>', unsafe_allow_html=True)
-            with t3: 
-                for u in reversed(st.session_state.data["censored"][-10:]): st.markdown(f'<div class="user-entry">{u}</div>', unsafe_allow_html=True)
-            # ... البقية متشابهة
-        
-        # وقت مستقطع بسيط جداً للسماح للمتصفح بالعرض
-        time.sleep(0.01)
-
-# الفوتر
+# --- 7. الفوتر ---
 st.markdown(f"""
     <div class="footer">
         <span>Made in Saudi Arabia 🇸🇦</span>
