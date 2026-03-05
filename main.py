@@ -18,19 +18,19 @@ if "theme" not in st.session_state: st.session_state.theme = "dark"
 # --- 2. التنسيق والسمات (CSS) ---
 is_dark = st.session_state.theme == "dark"
 bg_color = "#000000" if is_dark else "#ffffff"
-text_color = "#ffffff" if is_dark else "#000000"
-blue_fixed = "#007bff" # اللون الأزرق المطلوب الذي لا يتغير
+text_color = "#ffffff" if is_dark else "#000000" # النص فقط يتغير
+blue_fixed = "#007bff" # اللون الأزرق الثابت للحقول والأزرار
 
 st.markdown(f"""
     <style>
     /* الخلفية والنص الأساسي */
     .stApp {{ background-color: {bg_color}; color: {text_color}; transition: 0.3s; }}
     
-    /* تثبيت لون الحبال (Slider) للازرق */
+    /* تثبيت لون الحبال (Slider) للازرق دائماً */
     .stSlider [data-baseweb="slider"] div {{ background-color: {blue_fixed} !important; }}
     .stSlider [data-testid="stTickBar"] div {{ background-color: {blue_fixed} !important; }}
     
-    /* تثبيت لون الحقول (Input Boxes) */
+    /* تثبيت لون الحقول (Input Boxes) بالازرق */
     .stTextInput>div>div>input, .stNumberInput>div>div>input {{
         border: 2px solid {blue_fixed} !important;
         color: {text_color} !important;
@@ -43,7 +43,7 @@ st.markdown(f"""
         background-color: {blue_fixed} !important; color: white !important; border: none !important;
     }}
 
-    /* الإحصائيات (Metrics) */
+    /* الإحصائيات (Metrics) بالازرق الثابت */
     [data-testid="stMetric"] {{
         border: 2px solid {blue_fixed} !important;
         border-radius: 10px;
@@ -53,7 +53,6 @@ st.markdown(f"""
         color: {blue_fixed} !important;
     }}
 
-    /* مداخل النتائج */
     .user-entry {{
         font-family: monospace; padding: 6px; border-left: 3px solid {blue_fixed};
         background: rgba(0, 123, 255, 0.1); margin-bottom: 3px; color: {text_color};
@@ -63,9 +62,6 @@ st.markdown(f"""
         position: fixed; left: 0; bottom: 0; width: 100%; background: {bg_color};
         padding: 10px; text-align: center; border-top: 1px solid {blue_fixed}; color: {blue_fixed}; z-index: 100;
     }}
-    
-    /* لون علامة الصح في الـ Checkbox */
-    .stCheckbox div[data-testid="stMarkdownContainer"] p {{ color: {text_color} !important; }}
     </style>
     """, unsafe_allow_html=True)
 
@@ -91,8 +87,7 @@ left_col, right_col = st.columns([1, 2], gap="large")
 with left_col:
     is_ar = st.radio("Language", ["العربية", "English"], horizontal=True, label_visibility="collapsed") == "العربية"
     
-    theme_btn = "تغيير لون الصفحة" if is_ar else "Toggle Page Color"
-    if st.button(theme_btn):
+    if st.button("تغيير لون الصفحة" if is_ar else "Toggle Page Color"):
         st.session_state.theme = "light" if is_dark else "dark"
         st.rerun()
 
@@ -101,9 +96,7 @@ with left_col:
     u_prefix = st.text_input("User Starts With", value="")
     u_suffix = st.text_input("User Ends With", value="")
     
-    # حقل إضافة شرطة
     use_under = st.checkbox("إضافة شرطة _" if is_ar else "Add Underscore _", value=False)
-    # حقل إضافة أرقام (تحت زر الشرطة مباشرة)
     use_numbers = st.checkbox("إضافة أرقام" if is_ar else "Add Numbers", value=True)
     
     speed_option = st.select_slider("Speed", options=["Slow", "Normal", "Fast", "Extreme"], value="Fast")
