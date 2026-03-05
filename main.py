@@ -35,6 +35,9 @@ st.markdown("""
         border-radius: 4px; margin-bottom: 4px; border-left: 3px solid #58a6ff; 
         background: #0d1117; color: #e6edf3; 
     }
+    
+    /* تنسيق زر التحميل ليكون مميزاً */
+    .download-btn { margin-top: 15px; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -55,13 +58,13 @@ with left_col:
     lang = st.radio("Language", ["English", "العربية"], horizontal=True, label_visibility="collapsed")
     is_ar = lang == "العربية"
     
-    # 1. الحبل (Slider) يمتد بشكل حر
+    # 1. الحبل (Slider) يمتد بشكل حر من 100 إلى 100 ألف
     gen_limit = st.slider(
         "Generate Count" if not is_ar else "كمية التوليد",
         min_value=100, max_value=100000, value=1000, step=100
     )
     
-    # 2. المسميات المعدلة
+    # 2. المسميات المطلوبة
     u_len = st.number_input(
         "Username Character Count" if not is_ar else "عدد احرف اليوزر", 
         min_value=3, max_value=20, value=4
@@ -71,13 +74,14 @@ with left_col:
         placeholder="e.g. f5"
     )
     
-    # 3. خيار الشرطة
+    # 3. خيار الشرطة في أي مكان عدا الأطراف
     use_under = st.checkbox(
         "Add Underscore in Username" if not is_ar else "اضافة شرطة باليوزر"
     )
 
     st.markdown("---")
     
+    # أزرار التشغيل
     if not st.session_state.is_running:
         if st.button("🚀 Start Sniper" if not is_ar else "🚀 ابدأ القنص"):
             st.session_state.is_running = True
@@ -91,15 +95,21 @@ with left_col:
         st.session_state.data = {k: [] for k in st.session_state.data}
         st.rerun()
 
-    # 4. حفظ اليوزرات المتاحة
+    # --- الزر المطلوب: حفظ اليوزرات المتاحة في ملف TXT ---
     if st.session_state.data["valid"]:
-        valid_text = "\n".join(st.session_state.data["valid"])
+        st.markdown('<div class="download-btn">', unsafe_allow_html=True)
+        valid_content = "\n".join(st.session_state.data["valid"])
         st.download_button(
-            label="📥 Download Valid Users" if not is_ar else "📥 تحميل اليوزرات المتاحة",
-            data=valid_text, file_name="valid_usernames.txt", mime="text/plain"
+            label="📥 Save Valid Users (.txt)" if not is_ar else "📥 حفظ المتاح في مستند txt",
+            data=valid_content,
+            file_name="valid_usernames.txt",
+            mime="text/plain",
+            use_container_width=True
         )
+        st.markdown('</div>', unsafe_allow_html=True)
 
 with right_col:
+    # لوحة الإحصائيات
     total_found = sum(len(v) for v in st.session_state.data.values())
     m1, m2, m3, m4 = st.columns(4)
     m1.metric("TOTAL", f"{total_found}/{gen_limit}")
@@ -109,6 +119,7 @@ with right_col:
 
     st.markdown("<br>", unsafe_allow_html=True)
 
+    # التبويبات الخمسة
     tab_labels = ["✅ Valid", "❌ Taken", "🚫 Censored", "⚠️ Errors", "❓ Unknown"] if not is_ar \
                  else ["✅ متاح", "❌ مستخدم", "🚫 مبند", "⚠️ أخطاء", "❓ غير معروف"]
     tabs = st.tabs(tab_labels)
@@ -117,12 +128,12 @@ with right_col:
     for i, cat in enumerate(cats):
         with tabs[i]:
             if not st.session_state.data[cat]:
-                st.write("No results yet." if not is_ar else "لا توجد نتائج بعد.")
+                st.info("No results yet." if not is_ar else "لا توجد نتائج بعد.")
             else:
                 for item in reversed(st.session_state.data[cat][-100:]):
                     st.markdown(f'<div class="user-entry">{item}</div>', unsafe_allow_html=True)
 
-# --- محرك التشغيل ---
+# --- محرك القنص ---
 if st.session_state.is_running:
     chars = string.ascii_lowercase + string.digits
     while st.session_state.is_running and total_found < gen_limit:
@@ -131,7 +142,7 @@ if st.session_state.is_running:
         body = "".join(random.choices(body_pool, k=needed))
         user = u_prefix + body
         
-        # منطق الشرطة (ممنوعة في الأطراف)
+        # التأكد من عدم وجود الشرطة في الأطراف
         if use_under and len(user) >= 3:
             u_list = list(user)
             if u_list[0] == "_": u_list[0] = random.choice(chars)
@@ -156,7 +167,7 @@ if st.session_state.is_running:
         total_found += 1
         st.rerun()
 
-# --- الفوتر (الحقوق والعبارة المطلوبة) ---
+# --- الفوتر مع العبارة الوطنية ---
 st.markdown(f"""
     <div class="footer">
         <span>Made in Saudi Arabia 🇸🇦</span>
