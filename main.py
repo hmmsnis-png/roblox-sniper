@@ -20,8 +20,8 @@ st.markdown("""
         position: fixed; left: 0; bottom: 0; width: 100%; 
         background: #0d1117; padding: 10px; text-align: center; 
         border-top: 1px solid #30363d; color: #58a6ff; z-index: 100;
-        line-height: 1.5;
     }
+    .made-in { font-weight: bold; margin-top: 5px; color: #adbac7; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -42,14 +42,13 @@ with left_col:
     u_len = st.number_input("Username Length" if not is_ar else "عدد أحرف اليوزر", 3, 20, 4)
     u_prefix = st.text_input("يبدأ اليوزر بـ" if is_ar else "User Starts With", value="")
     
-    # السرعة الآن مضبوطة على 0.1 كأعلى خيار
     speed_option = st.select_slider(
         "Scanning Speed" if not is_ar else "سرعة الفحص",
         options=["Slow", "Normal", "Fast", "Extreme"],
         value="Extreme"
     )
     
-    # تعديل الـ Delay بناءً على طلبك (0.1 لأسرع شيء)
+    # السرعة القصوى (أقل تأخير ممكن)
     delay_map = {"Slow": 0.8, "Normal": 0.5, "Fast": 0.3, "Extreme": 0.1}
     current_delay = delay_map[speed_option]
     
@@ -133,10 +132,10 @@ if st.session_state.is_running:
         update_ui()
         if current_delay > 0: time.sleep(current_delay)
 
-# الفوتر المعدل بناءً على طلبك
+# الفوتر المعدل - السطر الأول حقوق، السطر الثاني السعودية
 st.markdown(f"""
     <div class="footer">
-        Developed by: 7o.f | discord: 7o.f | Mode: {speed_option}<br>
-        Made in Saudi Arabia 🇸🇦
+        <div>Developed by: 7o.f | discord: 7o.f | Mode: {speed_option}</div>
+        <div class="made-in">Made in Saudi Arabia 🇸🇦</div>
     </div>
 """, unsafe_allow_html=True)
