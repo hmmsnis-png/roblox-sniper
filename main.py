@@ -5,7 +5,7 @@ import random
 import string
 
 # --- 1. إعدادات الصفحة ---
-st.set_page_config(page_title="Max Speed Sniper | 7o.f", page_icon="⚡", layout="wide")
+st.set_page_config(page_title="Sniper roblox user | 7o.f", layout="wide")
 
 # --- 2. التنسيق (CSS) ---
 st.markdown("""
@@ -139,3 +139,4 @@ st.markdown(f"""
         <div class="made-in">Made in Saudi Arabia 🇸🇦</div>
     </div>
 """, unsafe_allow_html=True)
+
